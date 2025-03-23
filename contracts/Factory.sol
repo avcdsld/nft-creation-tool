@@ -19,13 +19,15 @@ contract Factory is Ownable {
         uint256 mintAmount,
         address owner,
         string memory name,
-        string memory imageUrl
+        string memory imageUrl,
+        string memory textColor,
+        string memory bgColor
     ) external returns (address) {
         if (owner == address(0)) {
             owner = msg.sender;
         }
 
-        Today newContract = new Today(name, imageUrl);
+        Today newContract = new Today(name, imageUrl, textColor, bgColor);
 
         if (mintAmount > 0) {
             newContract.mint(owner, mintAmount);

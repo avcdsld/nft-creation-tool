@@ -32,7 +32,9 @@ describe("Factory", function () {
         3, // mintAmount
         addr1.address, // owner
         "", // name (empty for default)
-        "" // imageUrl (empty for default)
+        "", // imageUrl (empty for default)
+        "", // textColor (empty for default)
+        "" // backgroundColor (empty for default)
       );
 
       await tx.wait();
@@ -55,7 +57,9 @@ describe("Factory", function () {
         1, // mintAmount
         owner.address, // owner
         customName, // name
-        "" // imageUrl
+        "", // imageUrl
+        "", // textColor (empty for default)
+        "" // backgroundColor (empty for default)
       );
 
       await tx.wait();
@@ -75,8 +79,10 @@ describe("Factory", function () {
       const tx = await factory.deploy(
         mintAmount,
         owner.address,
-        "Test NFTs",
-        ""
+        "Test NFTs", // name
+        "", // imageUrl
+        "", // textColor
+        "" // backgroundColor
       );
 
       await tx.wait();
@@ -97,7 +103,9 @@ describe("Factory", function () {
         1,
         owner.address,
         "NFT with Image",
-        imageUrl
+        imageUrl,
+        "", // textColor
+        "" // backgroundColor
       );
 
       await tx.wait();
@@ -120,8 +128,10 @@ describe("Factory", function () {
       const tx = await factory.connect(addr1).deploy(
         1,
         addr2.address, // Set addr2 as owner
-        "Test NFT",
-        ""
+        "Test NFT", // name
+        "", // imageUrl
+        "", // textColor
+        "" // backgroundColor
       );
 
       await tx.wait();
@@ -144,7 +154,9 @@ describe("Factory", function () {
         1,
         zeroAddress, // Zero address
         "Test NFT",
-        ""
+        "", // imageUrl
+        "", // textColor
+        "" // backgroundColor
       );
 
       await tx.wait();

@@ -13,8 +13,10 @@ describe("Today", function () {
 
     const Today = await ethers.getContractFactory("Today");
     today = await Today.deploy(
-      "Date Art Collection", // name
-      "" // imageUrl
+      "Today NFT", // name
+      "", // imageUrl
+      "", // textColor
+      "" // backgroundColor
     );
   });
 
@@ -24,7 +26,7 @@ describe("Today", function () {
     });
 
     it("Should set the right name", async function () {
-      expect(await today.name()).to.equal("Date Art Collection");
+      expect(await today.name()).to.equal("Today NFT");
     });
 
     it("Should set the right symbol", async function () {
@@ -35,7 +37,9 @@ describe("Today", function () {
       const Today = await ethers.getContractFactory("Today");
       const defaultNameNft = await Today.deploy(
         "", // Empty name
-        ""
+        "", // imageUrl
+        "", // textColor
+        "" // backgroundColor
       );
 
       const name = await defaultNameNft.name();
