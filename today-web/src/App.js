@@ -51,7 +51,7 @@ export default function App() {
     ctx.textAlign = "center";
     ctx.textBaseline = "middle";
     ctx.fillText(text, 400, 300);
-    return { url: canvas.toDataURL("image/webp", 0.8), bg };
+    return { url: canvas.toDataURL("image/webp", 0.4), bg };
   };
 
   const handleCreate = async () => {
@@ -70,13 +70,13 @@ export default function App() {
     let receipt;
     try {
       const tx = await contract.deploy(mintAmount, userAddress, name, finalImage, textColor, bgColor);
+      setTxUrl(`https://amoy.polygonscan.com/tx/${tx.hash}`);
       receipt = await tx.wait();
     } catch (err) {
       console.error("Listing failed:", err);
       alert("An error occurred while listing. Please try again.");
       return;
     }
-    setTxUrl(`https://amoy.polygonscan.com/tx/${receipt.hash}`);
   };
 
   const getContractAddressFromSlug = async (slug) => {
