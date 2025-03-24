@@ -240,11 +240,11 @@ export default function App() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-8 space-y-6 bg-white rounded-2xl shadow-lg border border-gray-200 mt-12 mb-12">
+    <div className="max-w-xl mx-auto p-8 space-y-6 bg-white rounded-2xl shadow-lg mt-12 mb-12">
       <h1 className="text-3xl font-extrabold text-gray-800">NFT Creation & Listing Tool</h1>
 
       {!account ? (
-        <button onClick={connect} className="border border-indigo-700 bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Connect Wallet</button>
+        <button onClick={connect} className="bg-indigo-600 text-white px-4 py-2 rounded-md hover:bg-indigo-700">Connect Wallet</button>
       ) : (
         <p className="text-sm text-gray-600">Connected: {account}</p>
       )}
@@ -269,7 +269,7 @@ export default function App() {
           onChange={(e) => setMintAmount(Number(e.target.value))}
           className="border p-2 rounded-md w-full"
         />
-        <button onClick={handleCreate} className="border border-green-700 bg-green-600 text-white py-2 rounded-md hover:bg-green-700 w-full">Create NFT</button>
+        <button onClick={handleCreate} className="bg-green-600 text-white py-2 rounded-md hover:bg-green-700 w-full">Create NFT</button>
       </div>
 
       {txUrl && (
@@ -295,7 +295,7 @@ export default function App() {
           onChange={(e) => setPrices(e.target.value)}
           className="border p-2 rounded-md w-full h-32"
         />
-        <button onClick={handleList} className="border border-blue-700 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 w-full">List NFTs</button>
+        <button onClick={handleList} className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 w-full">List NFTs</button>
       </div>
 
       <footer className="mt-12 text-center text-sm text-gray-400">
