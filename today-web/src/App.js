@@ -23,13 +23,75 @@ export default function App() {
   const [slug, setSlug] = useState("");
   const [prices, setPrices] = useState("");
 
-  const connect = async () => {
+  const ensureAmoyNetwork = async () => {
+    if (typeof window.ethereum === "undefined") {
+      alert("MetaMask is not installed. Please install MetaMask.");
+      return false;
+    }
+  
+    const amoyChainId = 80002;
     const prov = new ethers.BrowserProvider(window.ethereum);
-    const accs = await prov.send("eth_requestAccounts", []);
-    const s = await prov.getSigner();
-    setProvider(prov);
-    setSigner(s);
-    setAccount(accs[0]);
+    const network = await prov.getNetwork();
+  
+    if (network.chainId !== amoyChainId) {
+      try {
+        await window.ethereum.request({
+          method: "wallet_switchEthereumChain",
+          params: [{ chainId: "0x13882" }], // 80002
+        });
+      } catch (switchError) {
+        if (switchError.code === 4902) {
+          try {
+            await window.ethereum.request({
+              method: "wallet_addEthereumChain",
+              params: [{
+                chainId: "0x13882",
+                chainName: "Polygon Amoy",
+                nativeCurrency: {
+                  name: "MATIC",
+                  symbol: "MATIC",
+                  decimals: 18,
+                },
+                rpcUrls: ["https://rpc-amoy.polygon.technology"],
+                blockExplorerUrls: ["https://amoy.polygonscan.com/"],
+              }],
+            });
+          } catch (addError) {
+            alert("Failed to add the Amoy network. Please switch manually.");
+            console.error(addError);
+            return false;
+          }
+        } else {
+          alert("Failed to switch to Amoy network.");
+          console.error(switchError);
+          return false;
+        }
+      }
+    }
+  
+    return true;
+  };  
+
+  const connect = async () => {
+    if (typeof window.ethereum === "undefined") {
+      alert("MetaMask is not installed. Please install MetaMask to continue.");
+      return;
+    }
+  
+    const ok = await ensureAmoyNetwork();
+    if (!ok) return;
+  
+    try {
+      const prov = new ethers.BrowserProvider(window.ethereum);
+      const accs = await prov.send("eth_requestAccounts", []);
+      const s = await prov.getSigner();
+      setProvider(prov);
+      setSigner(s);
+      setAccount(accs[0]);
+    } catch (err) {
+      console.error("Wallet connection error:", err);
+      alert("Failed to connect wallet. Please check your MetaMask.");
+    }
   };
 
   const randomBgColor = () => {
@@ -53,8 +115,11 @@ export default function App() {
     ctx.fillText(text, 400, 300);
     return { url: canvas.toDataURL("image/webp", 0.4), bg };
   };
-
+  
   const handleCreate = async () => {
+    const ok = await ensureAmoyNetwork();
+    if (!ok) return;
+
     const dateStr = new Date()
       .toLocaleDateString("en-US", { timeZone: "UTC", month: "short", day: "numeric", year: "numeric" })
       .toUpperCase()
@@ -69,7 +134,10 @@ export default function App() {
 
     let receipt;
     try {
-      const tx = await contract.deploy(mintAmount, userAddress, name, finalImage, textColor, bgColor);
+      const tx = await contract.deploy(mintAmount, userAddress, name, finalImage, textColor, bgColor, {
+        maxFeePerGas: ethers.parseUnits("80", "gwei"),         // 全体の上限
+        maxPriorityFeePerGas: ethers.parseUnits("2", "gwei"),  // Minerへのチップ
+      });
       setTxUrl(`https://amoy.polygonscan.com/tx/${tx.hash}`);
       receipt = await tx.wait();
     } catch (err) {
@@ -88,6 +156,9 @@ export default function App() {
   };
 
   const handleList = async () => {
+    const ok = await ensureAmoyNetwork();
+    if (!ok) return;
+
     try {
       const priceList = prices
         .split("\n")
@@ -169,7 +240,7 @@ export default function App() {
   };
 
   return (
-    <div className="max-w-xl mx-auto p-8 space-y-6 bg-white rounded-2xl shadow-lg border border-gray-200 mt-12">
+    <div className="max-w-xl mx-auto p-8 space-y-6 bg-white rounded-2xl shadow-lg border border-gray-200 mt-12 mb-12">
       <h1 className="text-3xl font-extrabold text-gray-800">NFT Creation & Listing Tool</h1>
 
       {!account ? (
@@ -226,6 +297,18 @@ export default function App() {
         />
         <button onClick={handleList} className="border border-blue-700 bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 w-full">List NFTs</button>
       </div>
+
+      <footer className="mt-12 text-center text-sm text-gray-400">
+        © {new Date().getFullYear()} Ara ·{" "}
+        <a
+          href="https://github.com/avcdsld/nft-creation-tool"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline hover:text-gray-600"
+        >
+          GitHub
+        </a>
+      </footer>
     </div>
   );
 }
