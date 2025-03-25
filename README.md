@@ -61,7 +61,7 @@ The app will use the Seaport protocol to create and submit listings.
 ## 📎 Notes
 
 - This app is for **testnet experimentation only**  
-- The deployed contracts use a fixed factory (`0xcb23488ED162c5525ECeC6A3894063151D06F9b1`)  
+- The deployed contracts use a fixed factory (`0x482Ddf0532C362ddE13e9C8677F1b548a25843c1`)  
 - It assumes your collection is already created on OpenSea testnets  
 
 ---
