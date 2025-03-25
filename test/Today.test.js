@@ -100,6 +100,7 @@ describe("Today", function () {
       expect(jsonData).to.have.property("description");
       expect(jsonData).to.have.property("image");
 
+      expect(jsonData.name).to.equals("Today NFT");
       expect(jsonData.image).to.include("data:image/svg+xml;base64,");
 
       const svgBase64 = jsonData.image.replace("data:image/svg+xml;base64,", "");
@@ -133,21 +134,6 @@ describe("Today", function () {
 
       await expect(today.connect(addr1).setImageUrl("https://example.com/hacked.jpg"))
         .to.be.revertedWith("Ownable: caller is not the owner");
-    });
-  });
-
-  describe("Date Formatting", function () {
-    it("Should format date correctly in token name", async function () {
-      await today.mint(addr1.address, 1);
-
-      const tokenURI = await today.tokenURI(0);
-      const base64Data = tokenURI.replace("data:application/json;base64,", "");
-      const decodedData = Buffer.from(base64Data, 'base64').toString('utf8');
-      const jsonData = JSON.parse(decodedData);
-
-      // e.g. "APR.8,2025"
-      const dateRegex = /^[A-Z]{3}\.\d{1,2},\d{4}$/;
-      expect(dateRegex.test(jsonData.name)).to.be.true;
     });
   });
 });
