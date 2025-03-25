@@ -96,6 +96,18 @@ contract Today is ERC721A, Ownable {
         ));
     }
 
+    function _escapeString(string memory str) private pure returns (string memory) {
+        bytes memory strBytes = bytes(str);
+        bytes memory result = new bytes(strBytes.length);
+        for (uint i = 0; i < strBytes.length; i++) {
+            result[i] = strBytes[i];
+            if (result[i] == bytes('"')[0]) {
+                result[i] = bytes("'")[0];
+            }
+        }
+        return string(result);
+    }
+
     function name() public view virtual override returns (string memory) {
         return _name;
     }
@@ -112,7 +124,7 @@ contract Today is ERC721A, Ownable {
                     bytes(
                         abi.encodePacked(
                             '{"name":"', 
-                            _name,
+                            _escapeString(_name),
                             '","description":"',
                             dateString,
                             '","image":"',
