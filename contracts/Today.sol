@@ -15,6 +15,7 @@ contract Today is ERC721A, Ownable {
     string public textColor;
     string public bgColor;
     uint256 public time;
+    mapping(uint256 => string) public customTokenURIs;
 
     constructor(
         string memory contractName,
@@ -115,8 +116,12 @@ contract Today is ERC721A, Ownable {
     function tokenURI(uint256 tokenId) public view override returns (string memory) {
         if (!_exists(tokenId)) revert URIQueryForNonexistentToken();
 
-        string memory dateString = _formatDateString(time);
+        string memory customTokenURI = customTokenURIs[tokenId];
+        if (bytes(customTokenURI).length > 0) {
+            return customTokenURI;
+        }
 
+        string memory dateString = _formatDateString(time);
         return string(
             abi.encodePacked(
                 "data:application/json;base64,",
@@ -144,6 +149,19 @@ contract Today is ERC721A, Ownable {
     function setColors(string memory _textColor, string memory _bgColor) external onlyOwner {
         textColor = _textColor;
         bgColor = _bgColor;
+    }
+
+    function setCustomTokenURI(uint256 tokenId, string memory uri) external onlyOwner {
+        require(_exists(tokenId), "Token does not exist");
+        customTokenURIs[tokenId] = uri;
+    }
+
+    function setBatchCustomTokenURI(uint256[] memory tokenIds, string[] memory uris) external onlyOwner {
+        require(tokenIds.length == uris.length, "Mismatched input lengths");
+        for (uint256 i = 0; i < tokenIds.length; i++) {
+            require(_exists(tokenIds[i]), "Token does not exist");
+            customTokenURIs[tokenIds[i]] = uris[i];
+        }
     }
 
     function mint(address to, uint256 quantity) external onlyOwner {
