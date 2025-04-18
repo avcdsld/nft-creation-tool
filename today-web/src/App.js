@@ -5,7 +5,7 @@ import { Buffer } from "buffer";
 
 window.Buffer = Buffer;
 
-const factoryAddress = "0x138197866D8b24c8be239eF38d95b17c634C4161";
+const factoryAddress = "0xA0834DD5E47ceb85e202A7375f5aA5689acC0507";
 const factoryABI = [
   "function deploy(uint256,address,string,string,string,string) external returns (address)"
 ];
