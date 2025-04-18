@@ -129,7 +129,8 @@ contract Today is ERC721A, Ownable {
                     bytes(
                         abi.encodePacked(
                             '{"name":"', 
-                            _escapeString(_name),
+                            _escapeString(_name), 
+                            ' #', tokenId.toString(), 
                             '","description":"',
                             dateString,
                             '","image":"',
