@@ -16,7 +16,8 @@ describe("Today", function () {
       "Today NFT", // name
       "", // imageUrl
       "", // textColor
-      "" // backgroundColor
+      "", // backgroundColor
+      "" // bannerImage
     );
   });
 
@@ -39,7 +40,8 @@ describe("Today", function () {
         "", // Empty name
         "", // imageUrl
         "", // textColor
-        "" // backgroundColor
+        "", // backgroundColor
+        "" // bannerImage
       );
 
       const name = await defaultNameNft.name();
@@ -100,7 +102,7 @@ describe("Today", function () {
       expect(jsonData).to.have.property("description");
       expect(jsonData).to.have.property("image");
 
-      expect(jsonData.name).to.equals("Today NFT");
+      expect(jsonData.name).to.equal("Today NFT #0");
       expect(jsonData.image).to.include("data:image/svg+xml;base64,");
 
       const svgBase64 = jsonData.image.replace("data:image/svg+xml;base64,", "");
@@ -122,6 +124,29 @@ describe("Today", function () {
       const jsonData = JSON.parse(decodedData);
 
       expect(jsonData.image).to.equal(imageUrl);
+    });
+
+    it("Should set and update banner image", async function () {
+      const bannerImage = "https://example.com/banner.jpg";
+      
+      // Check initial contractURI
+      const initialContractURI = await today.contractURI();
+      const initialBase64Data = initialContractURI.replace("data:application/json;base64,", "");
+      const initialDecodedData = Buffer.from(initialBase64Data, 'base64').toString('utf8');
+      const initialJsonData = JSON.parse(initialDecodedData);
+      
+      expect(initialJsonData.banner_image).to.not.equal(bannerImage);
+
+      // Set new banner image
+      await today.setCustomBannerImage(bannerImage);
+
+      // Check updated contractURI
+      const updatedContractURI = await today.contractURI();
+      const updatedBase64Data = updatedContractURI.replace("data:application/json;base64,", "");
+      const updatedDecodedData = Buffer.from(updatedBase64Data, 'base64').toString('utf8');
+      const updatedJsonData = JSON.parse(updatedDecodedData);
+
+      expect(updatedJsonData.banner_image).to.equal(bannerImage);
     });
 
     it("Should fail for non-existent token", async function () {

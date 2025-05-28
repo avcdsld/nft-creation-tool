@@ -34,7 +34,9 @@ describe("Factory", function () {
         "", // name (empty for default)
         "", // imageUrl (empty for default)
         "", // textColor (empty for default)
-        "" // backgroundColor (empty for default)
+        "", // backgroundColor (empty for default)
+        "", // contractURI
+        "" // bannerImage
       );
 
       await tx.wait();
@@ -59,7 +61,9 @@ describe("Factory", function () {
         customName, // name
         "", // imageUrl
         "", // textColor (empty for default)
-        "" // backgroundColor (empty for default)
+        "", // backgroundColor (empty for default)
+        "", // contractURI
+        "" // bannerImage
       );
 
       await tx.wait();
@@ -82,7 +86,9 @@ describe("Factory", function () {
         "Test NFTs", // name
         "", // imageUrl
         "", // textColor
-        "" // backgroundColor
+        "", // backgroundColor
+        "", // contractURI
+        "" // bannerImage
       );
 
       await tx.wait();
@@ -98,6 +104,7 @@ describe("Factory", function () {
 
     it("Should set external image URL", async function () {
       const imageUrl = "https://example.com/image.jpg";
+      const bannerImage = "https://example.com/banner.jpg";
 
       const tx = await factory.deploy(
         1,
@@ -105,7 +112,9 @@ describe("Factory", function () {
         "NFT with Image",
         imageUrl,
         "", // textColor
-        "" // backgroundColor
+        "", // backgroundColor
+        "", // contractURI
+        bannerImage
       );
 
       await tx.wait();
@@ -131,7 +140,9 @@ describe("Factory", function () {
         "Test NFT", // name
         "", // imageUrl
         "", // textColor
-        "" // backgroundColor
+        "", // backgroundColor
+        "", // contractURI
+        "" // bannerImage
       );
 
       await tx.wait();
@@ -156,7 +167,9 @@ describe("Factory", function () {
         "Test NFT",
         "", // imageUrl
         "", // textColor
-        "" // backgroundColor
+        "", // backgroundColor
+        "", // contractURI
+        "" // bannerImage
       );
 
       await tx.wait();

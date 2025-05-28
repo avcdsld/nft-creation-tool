@@ -11,22 +11,28 @@ contract Today is ERC721A, Ownable {
 
     string private _name;
 
+    event ContractURIUpdated();
+
     string public imageUrl;
     string public textColor;
     string public bgColor;
     uint256 public time;
+    string public customContractURI;
+    string public customBannerImage;
     mapping(uint256 => string) public customTokenURIs;
 
     constructor(
         string memory contractName,
         string memory _imageUrl,
         string memory _textColor,
-        string memory _bgColor
+        string memory _bgColor,
+        string memory _bannerImage
     ) ERC721A(_getName(contractName), "TODAY") {
         _name = _getName(contractName);
         imageUrl = _imageUrl;
         textColor = bytes(_textColor).length > 0 ? _textColor : "#f5f5f5";
         bgColor = bytes(_bgColor).length > 0 ? _bgColor : "#000000";
+        customBannerImage = _bannerImage;
         time = block.timestamp;
     }
 
@@ -121,7 +127,6 @@ contract Today is ERC721A, Ownable {
             return customTokenURI;
         }
 
-        string memory dateString = _formatDateString(time);
         return string(
             abi.encodePacked(
                 "data:application/json;base64,",
@@ -132,7 +137,7 @@ contract Today is ERC721A, Ownable {
                             _escapeString(_name), 
                             ' #', tokenId.toString(), 
                             '","description":"',
-                            dateString,
+                            _escapeString(_name), 
                             '","image":"',
                             bytes(imageUrl).length > 0 ? imageUrl : _generateSVG(time),
                             '"}'
@@ -167,5 +172,41 @@ contract Today is ERC721A, Ownable {
 
     function mint(address to, uint256 quantity) external onlyOwner {
         _mint(to, quantity);
+    }
+
+    function setContractURI(string memory _uri) external onlyOwner {
+        customContractURI = _uri;
+        emit ContractURIUpdated();
+    }
+
+    function setCustomBannerImage(string memory _bannerImage) external onlyOwner {
+        customBannerImage = _bannerImage;
+        emit ContractURIUpdated();
+    }
+
+    function contractURI() public view returns (string memory) {
+        if (bytes(customContractURI).length > 0) {
+            return customContractURI;
+        }
+
+        string memory json = string(
+            abi.encodePacked(
+                '{"name":"', 
+                _escapeString(_name),
+                '","description":"',
+                _escapeString(_name),
+                '",',
+                '"image":"',
+                bytes(imageUrl).length > 0 ? imageUrl : _generateSVG(time),
+                '","banner_image":"',
+                bytes(customBannerImage).length > 0 ? customBannerImage : (bytes(imageUrl).length > 0 ? imageUrl : _generateSVG(time)),
+                '"}'
+            )
+        );
+
+        return string(abi.encodePacked(
+            "data:application/json;base64,",
+            Base64.encode(bytes(json))
+        ));
     }
 }

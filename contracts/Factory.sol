@@ -21,16 +21,22 @@ contract Factory is Ownable {
         string memory name,
         string memory imageUrl,
         string memory textColor,
-        string memory bgColor
+        string memory bgColor,
+        string memory contractURI,
+        string memory bannerImage
     ) external returns (address) {
         if (owner == address(0)) {
             owner = msg.sender;
         }
 
-        Today newContract = new Today(name, imageUrl, textColor, bgColor);
+        Today newContract = new Today(name, imageUrl, textColor, bgColor, bannerImage);
 
         if (mintAmount > 0) {
             newContract.mint(owner, mintAmount);
+        }
+
+        if (bytes(contractURI).length > 0) {
+            newContract.setContractURI(contractURI);
         }
 
         newContract.transferOwnership(owner);
