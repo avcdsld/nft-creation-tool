@@ -5,11 +5,10 @@ import { Buffer } from "buffer";
 
 window.Buffer = Buffer;
 
-const factoryAddress = "0xA0834DD5E47ceb85e202A7375f5aA5689acC0507";
+const factoryAddress = "0xe13794a05e45d78352E22D5c9df326911dc4DbFE";
 const factoryABI = [
-  "function deploy(uint256,address,string,string,string,string) external returns (address)"
+  "function deploy(uint256,address,string,string,string,string,string,string) external returns (address)"
 ];
-
 const bgColors = ["#000000", "#1A1A40", "#3B2F2F", "#3A4A3F", "#600000"];
 
 export default function App() {
@@ -18,6 +17,7 @@ export default function App() {
   const [account, setAccount] = useState(null);
   const [name, setName] = useState("");
   const [imageUrl, setImageUrl] = useState("");
+  const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [mintAmount, setMintAmount] = useState(10);
   const [txUrl, setTxUrl] = useState("");
   const [slug, setSlug] = useState("");
@@ -132,17 +132,47 @@ export default function App() {
     const contract = new ethers.Contract(factoryAddress, factoryABI, signer);
     const userAddress = await signer.getAddress();
 
+    console.log("Deploy parameters:", {
+      mintAmount,
+      userAddress,
+      name,
+      finalImage: finalImage.substring(0, 100) + "...",
+      textColor,
+      bgColor,
+      contractURI: "",
+      bannerImageUrl
+    });
+
     let receipt;
     try {
-      const tx = await contract.deploy(mintAmount, userAddress, name, finalImage, textColor, bgColor, {
-        maxFeePerGas: ethers.parseUnits("80", "gwei"),         // 全体の上限
-        maxPriorityFeePerGas: ethers.parseUnits("2", "gwei"),  // Minerへのチップ
-      });
+      const tx = await contract.deploy(
+        mintAmount,
+        userAddress,
+        name,
+        finalImage,
+        textColor,
+        bgColor,
+        "",
+        bannerImageUrl,
+        {
+          maxFeePerGas: ethers.parseUnits("50", "gwei"),
+          maxPriorityFeePerGas: ethers.parseUnits("1", "gwei"),
+          gasLimit: 8000000
+        }
+      );
+      console.log("Transaction sent:", tx.hash);
       setTxUrl(`https://amoy.polygonscan.com/tx/${tx.hash}`);
       receipt = await tx.wait();
+      console.log("Transaction receipt:", receipt);
     } catch (err) {
-      console.error("Listing failed:", err);
-      alert("An error occurred while listing. Please try again.");
+      console.error("Deployment failed:", err);
+      if (err.data) {
+        console.error("Error data:", err.data);
+      }
+      if (err.message) {
+        console.error("Error message:", err.message);
+      }
+      alert(`Deployment failed: ${err.message}`);
       return;
     }
   };
@@ -260,6 +290,12 @@ export default function App() {
           placeholder="Image URL (optional)"
           value={imageUrl}
           onChange={(e) => setImageUrl(e.target.value)}
+          className="border p-2 rounded-md w-full"
+        />
+        <input
+          placeholder="Banner Image URL (optional)"
+          value={bannerImageUrl}
+          onChange={(e) => setBannerImageUrl(e.target.value)}
           className="border p-2 rounded-md w-full"
         />
         <input

@@ -22,7 +22,16 @@ async function main() {
   try {
     const beforeCount = await factory.getContractsCount();
     
-    const tx = await factory.deploy(mintAmount, owner, "", imageUrl, "", "");
+    const tx = await factory.deploy(
+      mintAmount,
+      owner,
+      "",         // name
+      imageUrl,   // imageUrl
+      "",         // textColor
+      "",         // backgroundColor
+      "",         // contractURI
+      ""          // bannerImage
+    );
     await tx.wait();
     
     const afterCount = await factory.getContractsCount();
