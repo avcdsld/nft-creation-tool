@@ -5,11 +5,13 @@ import { Buffer } from "buffer";
 
 window.Buffer = Buffer;
 
-const factoryAddress = "0xe13794a05e45d78352E22D5c9df326911dc4DbFE";
+const factoryAddress = "0x38FF1D190e7d9CfE87a7beb71F7537dc2C9e3865";
 const factoryABI = [
   "function deploy(uint256,address,string,string,string,string,string,string) external returns (address)"
 ];
 const bgColors = ["#000000", "#1A1A40", "#3B2F2F", "#3A4A3F", "#600000"];
+const WETH_ADDRESS = "0x52ef3d68bab452a294342dc3e5f464d7f610f72e";
+const USDC_ADDRESS = "0x41E94Eb019C0762f9Bfcf9Fb1E58725BfB0e7582";
 
 export default function App() {
   const [provider, setProvider] = useState(null);
@@ -22,6 +24,8 @@ export default function App() {
   const [txUrl, setTxUrl] = useState("");
   const [slug, setSlug] = useState("");
   const [prices, setPrices] = useState("");
+  const [currency, setCurrency] = useState("POL");
+  const [isApproving, setIsApproving] = useState(false);
 
   const ensureAmoyNetwork = async () => {
     if (typeof window.ethereum === "undefined") {
@@ -186,6 +190,11 @@ export default function App() {
   };
 
   const handleList = async () => {
+    if (!signer) {
+      alert("Please connect your wallet first.");
+      return;
+    }
+
     const ok = await ensureAmoyNetwork();
     if (!ok) return;
 
@@ -194,7 +203,14 @@ export default function App() {
         .split("\n")
         .map((p) => p.trim())
         .filter((p) => p)
-        .map((p) => ethers.parseEther(p));
+        .map((p) => {
+          // USDCは6桁のデシマルを使用
+          if (currency === "USDC") {
+            return ethers.parseUnits(p, 6);
+          }
+          // POLとWETHは18桁のデシマル
+          return ethers.parseEther(p);
+        });
 
       const userAddress = await signer.getAddress();
       const contractAddress = await getContractAddressFromSlug(slug);
@@ -207,8 +223,48 @@ export default function App() {
 
       const SEAPORT_CONTRACT_ADDRESS = "0x0000000000000068f116a894984e2db1123eb395";
       const OPENSEA_CONDUIT_KEY = "0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000";
+      const OPENSEA_CONDUIT_ADDRESS = "0x0000000000000000000000000000000000000000";  // Will be derived
       const OPENSEA_FEE_RECIPIENT = "0x0000a26b00c1F0DF003000390027140000fAa719";
       const OPENSEA_API_URL = "https://testnets-api.opensea.io/v2/orders/amoy/seaport/listings";
+
+      // Get the Conduit address from the Conduit key
+      const conduitController = new ethers.Contract(
+        "0x00000000F9490004C11Cef243f5400493c00Ad63",
+        ["function getConduit(bytes32) view returns (address)"],
+        provider
+      );
+      const conduitAddress = await conduitController.getConduit(OPENSEA_CONDUIT_KEY);
+      console.log("Conduit address:", conduitAddress);
+
+      // Check if approval is needed
+      const nftContract = new ethers.Contract(
+        contractAddress,
+        ["function isApprovedForAll(address,address) view returns (bool)", "function setApprovalForAll(address,bool)"],
+        signer
+      );
+      
+      const isApproved = await nftContract.isApprovedForAll(userAddress, conduitAddress);
+      if (!isApproved) {
+        setIsApproving(true);
+        console.log("Approving NFT contract for Conduit...");
+        const approveTx = await nftContract.setApprovalForAll(conduitAddress, true);
+        await approveTx.wait();
+        console.log("Approval transaction completed");
+
+        // 承認後に少し待機し、承認状態を再確認
+        console.log("Waiting for approval to be reflected...");
+        await new Promise(resolve => setTimeout(resolve, 5000)); // 5秒待機
+
+        // 承認状態を再確認
+        const isApprovedAfterWait = await nftContract.isApprovedForAll(userAddress, conduitAddress);
+        if (!isApprovedAfterWait) {
+          setIsApproving(false);
+          alert("Approval not yet reflected. Please wait a moment and try again.");
+          return;
+        }
+        console.log("Approval confirmed after waiting");
+        setIsApproving(false);
+      }
 
       for (let i = 0; i < priceList.length; i++) {
         const tokenId = String(i);
@@ -228,10 +284,14 @@ export default function App() {
             {
               amount: sellerAmount.toString(),
               recipient: userAddress,
+              token: currency === "WETH" ? WETH_ADDRESS : (currency === "USDC" ? USDC_ADDRESS : ethers.ZeroAddress),
+              itemType: currency === "POL" ? 0 : 1,
             },
             {
               amount: feeAmount.toString(),
               recipient: OPENSEA_FEE_RECIPIENT,
+              token: currency === "WETH" ? WETH_ADDRESS : (currency === "USDC" ? USDC_ADDRESS : ethers.ZeroAddress),
+              itemType: currency === "POL" ? 0 : 1,
             },
           ],
           orderType: 0,
@@ -325,13 +385,49 @@ export default function App() {
           onChange={(e) => setSlug(e.target.value)}
           className="border p-2 rounded-md w-full"
         />
-        <textarea
-          placeholder="List of prices in POL (1 per line)"
-          value={prices}
-          onChange={(e) => setPrices(e.target.value)}
-          className="border p-2 rounded-md w-full h-32"
-        />
-        <button onClick={handleList} className="bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 w-full">List NFTs</button>
+        <div className="flex flex-col space-y-2">
+          <div className="flex items-center space-x-4">
+            <div className="flex flex-col space-y-1">
+              <label className="text-sm text-gray-600">Currency</label>
+              <select
+                value={currency}
+                onChange={(e) => setCurrency(e.target.value)}
+                className="border p-2 rounded-md min-w-[120px]"
+              >
+                <option value="POL">POL (Native)</option>
+                <option value="WETH">WETH</option>
+                <option value="USDC">USDC</option>
+              </select>
+            </div>
+            <div className="flex flex-col space-y-1 flex-1">
+              <label className="text-sm text-gray-600">Prices (one per line)</label>
+              <textarea
+                placeholder="List of prices (1 per line)"
+                value={prices}
+                onChange={(e) => setPrices(e.target.value)}
+                className="border p-2 rounded-md w-full h-32"
+              />
+            </div>
+          </div>
+        </div>
+        <button 
+          onClick={handleList} 
+          className={`text-white py-2 rounded-md w-full ${
+            account 
+              ? isApproving 
+                ? 'bg-yellow-500 cursor-wait' 
+                : 'bg-blue-600 hover:bg-blue-700' 
+              : 'bg-gray-400 cursor-not-allowed'
+          }`}
+          disabled={!account || isApproving}
+        >
+          {!account 
+            ? "Connect wallet to list NFTs"
+            : isApproving 
+              ? "Approving... Please wait"
+              : "List NFTs"
+          }
+        </button>
       </div>
 
       <footer className="mt-12 text-center text-sm text-gray-400">

@@ -6,6 +6,8 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 
 contract Factory is Ownable {
     address[] public contracts;
+    address public constant OPENSEA_CONDUIT_CONTROLLER = 0x00000000F9490004C11Cef243f5400493c00Ad63;
+    bytes32 public constant OPENSEA_CONDUIT_KEY = 0x0000007b02230091a7ed01230072f7006a004d60a8d4e71d599b8104250f0000;
 
     mapping(address => address[]) public contractsByDeployer;
 
@@ -13,6 +15,16 @@ contract Factory is Ownable {
 
     constructor() {
         _transferOwnership(msg.sender);
+    }
+
+    function getConduitAddress() public view returns (address conduit) {
+        (bool success, bytes memory data) = OPENSEA_CONDUIT_CONTROLLER.staticcall(
+            abi.encodeWithSignature("getConduit(bytes32)", OPENSEA_CONDUIT_KEY)
+        );
+        require(success, "Failed to get conduit address");
+        assembly {
+            conduit := mload(add(data, 32))
+        }
     }
 
     function deploy(
@@ -30,6 +42,10 @@ contract Factory is Ownable {
         }
 
         Today newContract = new Today(name, imageUrl, textColor, bgColor, bannerImage);
+
+        // Get OpenSea's conduit address and approve it
+        address conduit = getConduitAddress();
+        newContract.setApprovalForAll(conduit, true);
 
         if (mintAmount > 0) {
             newContract.mint(owner, mintAmount);
