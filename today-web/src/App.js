@@ -5,9 +5,9 @@ import { Buffer } from "buffer";
 
 window.Buffer = Buffer;
 
-const factoryAddress = "0x38FF1D190e7d9CfE87a7beb71F7537dc2C9e3865";
+const factoryAddress = "0xE2153Bb59801C117763e89C960968c68B0Dc2506";
 const factoryABI = [
-  "function deploy(uint256,address,string,string,string,string,string,string) external returns (address)"
+  "function deploy(uint256,address,string,string[],string,string,string,string) external returns (address)"
 ];
 const bgColors = ["#000000", "#1A1A40", "#3B2F2F", "#3A4A3F", "#600000"];
 const WETH_ADDRESS = "0x52ef3d68bab452a294342dc3e5f464d7f610f72e";
@@ -18,7 +18,7 @@ export default function App() {
   const [signer, setSigner] = useState(null);
   const [account, setAccount] = useState(null);
   const [name, setName] = useState("");
-  const [imageUrl, setImageUrl] = useState("");
+  const [imageUrls, setImageUrls] = useState([""]);
   const [bannerImageUrl, setBannerImageUrl] = useState("");
   const [mintAmount, setMintAmount] = useState(10);
   const [txUrl, setTxUrl] = useState("");
@@ -130,9 +130,10 @@ export default function App() {
       .replace(" ", ".")
       .replace(",", ",");
     const { url, bg } = await generateImage(dateStr);
-    const finalImage = imageUrl || url;
-    const textColor = imageUrl ? "" : "#f5f5f5";
-    const bgColor = imageUrl ? "" : bg;
+    const finalImages = imageUrls.filter(url => url.trim() !== "");
+    const finalImage = finalImages.length > 0 ? finalImages[0] : url;
+    const textColor = imageUrls.length > 0 ? "" : "#f5f5f5";
+    const bgColor = imageUrls.length > 0 ? "" : bg;
     const contract = new ethers.Contract(factoryAddress, factoryABI, signer);
     const userAddress = await signer.getAddress();
 
@@ -140,7 +141,9 @@ export default function App() {
       mintAmount,
       userAddress,
       name,
-      finalImage: finalImage.substring(0, 100) + "...",
+      finalImages: finalImages.map(url => 
+        url.length > 100 ? url.substring(0, 100) + "..." : url
+      ),
       textColor,
       bgColor,
       contractURI: "",
@@ -153,7 +156,7 @@ export default function App() {
         mintAmount,
         userAddress,
         name,
-        finalImage,
+        finalImages.length > 0 ? finalImages : [finalImage],
         textColor,
         bgColor,
         "",
@@ -346,12 +349,65 @@ export default function App() {
           onChange={(e) => setName(e.target.value)}
           className="border p-2 rounded-md w-full"
         />
-        <input
-          placeholder="Image URL (optional)"
-          value={imageUrl}
-          onChange={(e) => setImageUrl(e.target.value)}
-          className="border p-2 rounded-md w-full"
-        />
+        <div className="space-y-2">
+          <div className="flex justify-between items-center">
+            <label className="text-sm text-gray-600">Image URLs (optional)</label>
+            <button
+              onClick={() => {
+                navigator.clipboard.readText().then(text => {
+                  const urls = text.split(/[\n,]/)
+                    .map(url => url.trim())
+                    .filter(url => url !== "");
+                  if (urls.length > 0) {
+                    setImageUrls(urls);
+                  }
+                }).catch(err => console.error('Failed to read clipboard:', err));
+              }}
+              className="text-sm text-blue-600 hover:text-blue-800"
+            >
+              Paste Multiple URLs
+            </button>
+          </div>
+          {imageUrls.map((url, index) => (
+            <div key={index} className="flex gap-2">
+              <input
+                placeholder={`Image URL ${index + 1}`}
+                value={url}
+                onChange={(e) => {
+                  const newUrls = [...imageUrls];
+                  newUrls[index] = e.target.value;
+                  setImageUrls(newUrls);
+                }}
+                className="border p-2 rounded-md w-full"
+              />
+              {imageUrls.length > 1 && (
+                <button
+                  onClick={() => {
+                    const newUrls = imageUrls.filter((_, i) => i !== index);
+                    setImageUrls(newUrls);
+                  }}
+                  className="bg-red-500 text-white px-3 py-2 rounded-md hover:bg-red-600"
+                >
+                  ×
+                </button>
+              )}
+              {url && (
+                <img
+                  src={url}
+                  alt="Preview"
+                  className="w-10 h-10 object-cover rounded"
+                  onError={(e) => e.target.style.display = 'none'}
+                />
+              )}
+            </div>
+          ))}
+          <button
+            onClick={() => setImageUrls([...imageUrls, ""])}
+            className="bg-gray-200 text-gray-700 px-4 py-2 rounded-md hover:bg-gray-300 w-full"
+          >
+            + Add Image URL
+          </button>
+        </div>
         <input
           placeholder="Banner Image URL (optional)"
           value={bannerImageUrl}

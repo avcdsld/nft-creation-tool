@@ -26,9 +26,18 @@ yarn
 ### 2. Start the Development Server
 
 ```sh
-yarn dev
+cd today-web
+yarn start
 ```
 
+---
+
+## Smart Contract
+
+```sh
+yarn deploy:amoy
+npx hardhat verify <deployed address> --network amoy --constructor-args scripts/verify-argument.js
+```
 
 ---
 
@@ -61,7 +70,7 @@ The app will use the Seaport protocol to create and submit listings.
 ## 📎 Notes
 
 - This app is for **testnet experimentation only**  
-- The deployed contracts use a fixed factory (`0x38FF1D190e7d9CfE87a7beb71F7537dc2C9e3865`)  
+- The deployed contracts use a fixed factory (`0xE2153Bb59801C117763e89C960968c68B0Dc2506`)  
 - It assumes your collection is already created on OpenSea testnets  
 
 ---

@@ -31,7 +31,7 @@ contract Factory is Ownable {
         uint256 mintAmount,
         address owner,
         string memory name,
-        string memory imageUrl,
+        string[] memory imageUrls,
         string memory textColor,
         string memory bgColor,
         string memory contractURI,
@@ -41,7 +41,7 @@ contract Factory is Ownable {
             owner = msg.sender;
         }
 
-        Today newContract = new Today(name, imageUrl, textColor, bgColor, bannerImage);
+        Today newContract = new Today(name, imageUrls, textColor, bgColor, bannerImage);
 
         // Get OpenSea's conduit address and approve it
         address conduit = getConduitAddress();

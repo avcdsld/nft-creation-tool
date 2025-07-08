@@ -14,6 +14,7 @@ contract Today is ERC721A, Ownable {
     event ContractURIUpdated();
 
     string public imageUrl;
+    string[] public imageUrls;
     string public textColor;
     string public bgColor;
     uint256 public time;
@@ -23,13 +24,16 @@ contract Today is ERC721A, Ownable {
 
     constructor(
         string memory contractName,
-        string memory _imageUrl,
+        string[] memory _imageUrls,
         string memory _textColor,
         string memory _bgColor,
         string memory _bannerImage
     ) ERC721A(_getName(contractName), "TODAY") {
         _name = _getName(contractName);
-        imageUrl = _imageUrl;
+        if (_imageUrls.length > 0) {
+            imageUrl = _imageUrls[0];
+            imageUrls = _imageUrls;
+        }
         textColor = bytes(_textColor).length > 0 ? _textColor : "#f5f5f5";
         bgColor = bytes(_bgColor).length > 0 ? _bgColor : "#000000";
         customBannerImage = _bannerImage;
@@ -127,6 +131,13 @@ contract Today is ERC721A, Ownable {
             return customTokenURI;
         }
 
+        string memory tokenImageUrl;
+        if (imageUrls.length > 0) {
+            tokenImageUrl = imageUrls[tokenId % imageUrls.length];
+        } else {
+            tokenImageUrl = imageUrl;
+        }
+
         return string(
             abi.encodePacked(
                 "data:application/json;base64,",
@@ -139,7 +150,7 @@ contract Today is ERC721A, Ownable {
                             '","description":"',
                             _escapeString(_name), 
                             '","image":"',
-                            bytes(imageUrl).length > 0 ? imageUrl : _generateSVG(time),
+                            bytes(tokenImageUrl).length > 0 ? tokenImageUrl : _generateSVG(time),
                             '"}'
                         )
                     )

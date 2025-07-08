@@ -26,7 +26,7 @@ async function main() {
       mintAmount,
       owner,
       "",         // name
-      imageUrl,   // imageUrl
+      [imageUrl], // imageUrls
       "",         // textColor
       "",         // backgroundColor
       "",         // contractURI
